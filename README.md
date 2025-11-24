@@ -2,7 +2,7 @@
 📚 Detailed Step-by-Step Tutorial
 This repository contains the code and assets for the project. For a comprehensive, end-to-end guide on how to build this architecture from scratch—including infrastructure setup, security configuration, and detailed explanations of the code—please read the accompanying article on Medium:
 
-👉 Read the Full Tutorial on Medium: ![Building an Enterprise-Grade Crypto Data Lakehouse on Azure 👈](https://medium.com/@raj.vinay2408/f916a3acaebe)
+👉 Read the Full Tutorial on Medium: [Building an Enterprise-Grade Crypto Data Lakehouse on Azure 👈](https://medium.com/@raj.vinay2408/f916a3acaebe)
 
 ![Architectre](https://github.com/user-attachments/assets/c4938116-87cb-4c8b-b380-8533bafeebeb)
 
