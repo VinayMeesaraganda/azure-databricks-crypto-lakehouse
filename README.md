@@ -1,17 +1,19 @@
-# azure-databricks-crypto-lakehouse
-End-to-end Azure Data Engineering project processing 76M+ rows using Databricks, Spark Structured Streaming, Unity Catalog, and a Medallion Architecture.
 # 🪙 Azure Data Engineering Project: End-to-End Crypto Lakehouse
+📚 Detailed Step-by-Step Tutorial
+This repository contains the code and assets for the project. For a comprehensive, end-to-end guide on how to build this architecture from scratch—including infrastructure setup, security configuration, and detailed explanations of the code—please read the accompanying article on Medium:
 
-![Gemini_Generated_Image_coq93rcoq93rcoq9](https://github.com/user-attachments/assets/c4938116-87cb-4c8b-b380-8533bafeebeb)
+👉 Read the Full Tutorial on Medium: ![Building an Enterprise-Grade Crypto Data Lakehouse on Azure 👈](https://medium.com/@raj.vinay2408/f916a3acaebe)
+
+![Architectre](https://github.com/user-attachments/assets/c4938116-87cb-4c8b-b380-8533bafeebeb)
 
 
-## 📋 Executive Summary
+## 📋 Summary
 
 This project is a production-grade Data Lakehouse built on Microsoft Azure, designed to ingest, process, and serve large-scale cryptocurrency trade data. The pipeline successfully processed a historical dataset of over **76 Million rows** (5.5 GB raw), transforming it into a query-ready Star Schema for BI analysis.
 
 The architecture adheres to best practices using the **Medallion Architecture** (Bronze/Silver/Gold), **Unity Catalog** for centralized governance, and **Spark Structured Streaming** for resilient, incremental data ingestion.
 
-### Key Achievements & "Senior" Features implemented:
+### Key Achievements & Features implemented:
 * **Infrastructure as Code:** Control tables and Star Schema definitions managed via SQL scripts.
 * **Resilient Ingestion:** Implemented Databricks **Auto Loader** for streaming ingestion, handling schema drift and file notification automatically.
 * **Enterprise Security:** Zero hardcoded access keys. Utilized **Managed Identities**, **Service Principals**, and **Azure Key Vault** enforced by **Unity Catalog**.
@@ -58,12 +60,4 @@ The pipeline follows a linear flow orchestrated by ADF, moving data through incr
 
 ---
 
-## 📂 Repository Structure
 
-```bash
-├── code/
-│   ├── databricks_notebooks/  # PySpark notebooks for Bronze, Silver, and Gold layers
-│   └── sql_scripts/           # DDLs for Control Tables and Star Schema tables
-├── docs/
-│   └── images/                # Architecture diagrams and execution screenshots
-└── README.md                  # Project documentation
