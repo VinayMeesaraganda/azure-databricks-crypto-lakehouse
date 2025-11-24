@@ -1,0 +1,273 @@
+{
+    "name": "PL_EndToEnd_Crypto_Load",
+    "properties": {
+        "activities": [
+            {
+                "name": "Run Bronze Ingestion",
+                "type": "DatabricksNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Log Pipeline Start",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "notebookPath": "/Users/raj.vinay2408@gmail.com/01_Ingest_Bronze"
+                },
+                "linkedServiceName": {
+                    "referenceName": "LS_Databricks_TokenAuth",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "Run Gold Aggregation",
+                "type": "DatabricksNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Log Silver Done",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "notebookPath": "/Users/raj.vinay2408@gmail.com/03_Gold_Aggregation"
+                },
+                "linkedServiceName": {
+                    "referenceName": "LS_Databricks_TokenAuth",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "Run Silver Transformation",
+                "type": "DatabricksNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Log Bronze Done",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "typeProperties": {
+                    "notebookPath": "/Users/raj.vinay2408@gmail.com/02_Silver_Transformation"
+                },
+                "linkedServiceName": {
+                    "referenceName": "LS_Databricks_TokenAuth",
+                    "type": "LinkedServiceReference"
+                }
+            },
+            {
+                "name": "Log Pipeline Start",
+                "type": "Script",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "linkedServiceName": {
+                    "referenceName": "LS_AzureSQL",
+                    "type": "LinkedServiceReference"
+                },
+                "typeProperties": {
+                    "scripts": [
+                        {
+                            "type": "Query",
+                            "text": {
+                                "value": "-- 1. Create a new Run Log\nINSERT INTO ETL.PipelineRunLog (PipelineID, ADF_RunID, StartTime, Status)\nVALUES (1, '@{pipeline().RunId}', GETDATE(), 'RUNNING');\n\n-- 2. Capture the new ID to use later\n-- (We use SCOPE_IDENTITY to pass this ID to subsequent steps)\nSELECT SCOPE_IDENTITY() as NewRunID;\n\n-- 3. Update Control Table to say \"I am busy\"\nUPDATE ETL.PipelineControl \nSET LastRunStatus = 'RUNNING', CurrentRunID = SCOPE_IDENTITY()\nWHERE PipelineID = 1;",
+                                "type": "Expression"
+                            }
+                        }
+                    ],
+                    "scriptBlockExecutionTimeout": "02:00:00"
+                }
+            },
+            {
+                "name": "Log Bronze Done",
+                "type": "Script",
+                "dependsOn": [
+                    {
+                        "activity": "Run Bronze Ingestion",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "linkedServiceName": {
+                    "referenceName": "LS_AzureSQL",
+                    "type": "LinkedServiceReference"
+                },
+                "typeProperties": {
+                    "scripts": [
+                        {
+                            "type": "Query",
+                            "text": {
+                                "value": "INSERT INTO ETL.TaskLog (RunID, TaskName, EndTime, Status, TargetTable)\nVALUES (\n    @{activity('Log Pipeline Start').output.resultSets[0].rows[0].NewRunID}, \n    'Bronze_Ingestion', \n    GETDATE(), \n    'SUCCESS', \n    'crypto_cat.bronze.sales_raw'\n);",
+                                "type": "Expression"
+                            }
+                        }
+                    ],
+                    "scriptBlockExecutionTimeout": "02:00:00"
+                }
+            },
+            {
+                "name": "Log Silver Done",
+                "type": "Script",
+                "dependsOn": [
+                    {
+                        "activity": "Run Silver Transformation",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "linkedServiceName": {
+                    "referenceName": "LS_AzureSQL",
+                    "type": "LinkedServiceReference"
+                },
+                "typeProperties": {
+                    "scripts": [
+                        {
+                            "type": "Query",
+                            "text": {
+                                "value": "INSERT INTO ETL.TaskLog (RunID, TaskName, EndTime, Status, TargetTable)\nVALUES (\n    @{activity('Log Pipeline Start').output.resultSets[0].rows[0].NewRunID}, \n    'Silver_Transformation', \n    GETDATE(), \n    'SUCCESS', \n    'crypto_cat.silver.trades'\n);",
+                                "type": "Expression"
+                            }
+                        }
+                    ],
+                    "scriptBlockExecutionTimeout": "02:00:00"
+                }
+            },
+            {
+                "name": "Log Pipeline Success",
+                "type": "Script",
+                "dependsOn": [
+                    {
+                        "activity": "Run Gold Aggregation",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "linkedServiceName": {
+                    "referenceName": "LS_AzureSQL",
+                    "type": "LinkedServiceReference"
+                },
+                "typeProperties": {
+                    "scripts": [
+                        {
+                            "type": "Query",
+                            "text": {
+                                "value": "/* Get the RunID created at the start of the pipeline \n   and the Row Count sent back from the Gold Notebook\n*/\nDECLARE @RunID BIGINT = @{activity('Log Pipeline Start').output.resultSets[0].rows[0].NewRunID};\nDECLARE @RowCount INT = @{int(activity('Run Gold Aggregation').output.runOutput)}; \n\n-- 1. Log the specific Gold Task with the REAL count\nINSERT INTO ETL.TaskLog (RunID, TaskName, EndTime, Status, TargetTable, RecordsAffected)\nVALUES (\n    @RunID, \n    'Gold_Aggregation', \n    GETDATE(), \n    'SUCCESS', \n    'dbo.Fact_Daily_Market',\n    @RowCount\n);\n\n-- 2. Close the Master Run Log with the Total Count\nUPDATE ETL.PipelineRunLog\nSET \n    Status = 'SUCCESS', \n    EndTime = GETDATE(), \n    TotalRecordsProcessed = @RowCount\nWHERE RunID = @RunID;\n\n-- 3. Update the Control Table Watermark\nUPDATE ETL.PipelineControl\nSET \n    LastRunStatus = 'SUCCESS', \n    LastSuccessTime = GETDATE(), \n    WatermarkDate = GETDATE()\nWHERE PipelineID = 1;",
+                                "type": "Expression"
+                            }
+                        }
+                    ],
+                    "scriptBlockExecutionTimeout": "02:00:00"
+                }
+            },
+            {
+                "name": "Log Failure",
+                "type": "Script",
+                "dependsOn": [
+                    {
+                        "activity": "Run Bronze Ingestion",
+                        "dependencyConditions": [
+                            "Failed"
+                        ]
+                    },
+                    {
+                        "activity": "Run Silver Transformation",
+                        "dependencyConditions": [
+                            "Failed"
+                        ]
+                    },
+                    {
+                        "activity": "Run Gold Aggregation",
+                        "dependencyConditions": [
+                            "Failed"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "userProperties": [],
+                "linkedServiceName": {
+                    "referenceName": "LS_AzureSQL",
+                    "type": "LinkedServiceReference"
+                },
+                "typeProperties": {
+                    "scripts": [
+                        {
+                            "type": "Query",
+                            "text": "-- 1. Close the Task Log (Mark whatever was running as FAILED)\nUPDATE ETL.TaskLog\nSET Status = 'FAILED', EndTime = GETDATE()\nWHERE RunID = (SELECT TOP 1 RunID FROM ETL.PipelineRunLog WHERE Status = 'RUNNING')\n  AND Status = 'RUNNING';\n\n-- 2. Close the Pipeline Run Log\nUPDATE ETL.PipelineRunLog\nSET Status = 'FAILED', EndTime = GETDATE(), ErrorMessage = 'ADF Activity Failed'\nWHERE Status = 'RUNNING';\n\n-- 3. Update Control Table to FAILED\nUPDATE ETL.PipelineControl\nSET LastRunStatus = 'FAILED', LastRunEndTime = GETDATE()\nWHERE PipelineName = 'PL_EndToEnd_Crypto_Load';"
+                        }
+                    ],
+                    "scriptBlockExecutionTimeout": "02:00:00"
+                }
+            }
+        ],
+        "annotations": [],
+        "lastPublishTime": "2025-11-24T16:01:22Z"
+    },
+    "type": "Microsoft.DataFactory/factories/pipelines"
+}
