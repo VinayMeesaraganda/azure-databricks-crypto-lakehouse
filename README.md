@@ -2,7 +2,8 @@
 End-to-end Azure Data Engineering project processing 76M+ rows using Databricks, Spark Structured Streaming, Unity Catalog, and a Medallion Architecture.
 # 🪙 Azure Data Engineering Project: End-to-End Crypto Lakehouse
 
-![Architecture Diagram](docs/images/architecture_diagram.png)
+![Gemini_Generated_Image_coq93rcoq93rcoq9](https://github.com/user-attachments/assets/c4938116-87cb-4c8b-b380-8533bafeebeb)
+
 
 ## 📋 Executive Summary
 
